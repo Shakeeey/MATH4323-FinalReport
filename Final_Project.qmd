@@ -1,0 +1,178 @@
+---
+title: "Classify Eye State Analysis for Eye Detection"
+author: "Shaheer Ahsan, Mustafa Ssaid, Shahd Abu-Obeid, Anand Sabnis"
+date: "`r Sys.Date()`"
+format: pdf
+toc: true
+---
+
+## Introduction
+
+The purpose of this project is to classify the eye state (open or closed) using EEG data collected from 14 electrodes placed on the scalp. The dataset consists of 10,486 observations with 14 numerical predictors and one binary response variable (eyeDetection). The focus is to evaluate the performance of a Support Vector Machine (SVM) model with a Radial Basis Function (RBF) kernel. This model is chosen for its ability to handle non-linear patterns effectively, which are common in EEG data. Additionally, we will also evaluate the performance of a K-Nearest Neighbors (KNN) model.
+
+Write here more about Knn.....
+
+## Methodology/Models
+
+The models that will be implemented for this research project include **Support Vector Machine (SVM)** and **K-Nearest Neighbor (KNN)**
+
+1.  Radial SVM uses the RBF kernel, represented as:
+
+> K(x, x') = exp(-y \|\| x - x '\|\|\^2)
+
+where:
+
+-   y controls the influence of individual points.
+-   cost balances classification accuracy and margin width.
+
+The dataset was divided into 80% for training and validation, and 20% for testing. Features were scaled to ensure equal importance. The best hyperparameters were identified through 5-fold cross-validation, optimizing both cost and 𝛾. Performance was assessed using error rates, confusion matrices, and visualizations.
+
+2.  KNN info here....
+
+## Data Analysis
+
+### 1. Support Vector Machine (Shaheer Ahsan & Mustafa Ssaid)
+
+```{r setup, include=FALSE}
+library(knitr)
+library(ggplot2)
+library(e1071)
+library(GGally)
+```
+
+**Load Data**
+
+```{r}
+# Load training and test data
+train_data <- read.csv("train.csv")
+test_data <- read.csv("test.csv")  # No eyeDetection column
+
+# Convert eyeDetection to a factor
+train_data$eyeDetection <- as.factor(train_data$eyeDetection)
+
+# Check data structure
+str(train_data)
+
+```
+
+**Exploratory Data Analysis**
+
+```{r}
+# Pairwise plot of first few features
+ggpairs(train_data[, c(1:5, 15)], aes(color = eyeDetection))
+
+# Correlation between first two electrodes
+cor(train_data$AF3, train_data$F7)
+
+```
+
+The correlation between the first two features (AF3 and F7) was found to be weak (𝑟= −0.22), indicating low collinearity. Similar patterns were observed across other features, suggesting that all predictors could contribute to the model without significant redundancy.
+
+**Scaling and Data Splitting**
+
+```{r}
+# Scale features
+set.seed(123)
+train_scaled <- scale(train_data[, -15])
+test_scaled <- scale(test_data, center = attr(train_scaled, "scaled:center"), 
+                     scale = attr(train_scaled, "scaled:scale"))
+
+# Add eyeDetection back to the scaled training data
+train_scaled <- data.frame(train_scaled)
+train_scaled$eyeDetection <- train_data$eyeDetection
+
+# Split training data into train (80%) and validation (20%)
+n <- nrow(train_scaled)
+train_idx <- sample(1:n, 0.8 * n)
+train_set <- train_scaled[train_idx, ]
+val_set <- train_scaled[-train_idx, ]
+
+```
+
+**Model Tuning**
+
+```{r}
+# Tune SVM with radial kernel
+set.seed(123)
+svm_tune <- tune(svm,
+                 eyeDetection ~ .,
+                 data = train_set,
+                 kernel = "radial",
+                 ranges = list(cost = c(1, 10), gamma = c(0.1, 1)),
+                 tunecontrol = tune.control(cross = 5))
+
+# Best model summary
+summary(svm_tune)
+
+```
+
+The Radial SVM model was tuned over the following ranges:
+
+-   cost: {1, 10}
+-   y: {0.1, 1}
+
+*Results:*
+
+-   Best parameters: cost = 10, y = 1
+
+-   Cross-validation error: 5.48%
+
+> This low error rate demonstrates the model's ability to generalize across folds.
+
+**Model Evaluation**
+
+```{r}
+# Predict on validation set
+val_predictions <- predict(svm_tune$best.model, val_set[, -15])
+
+# Confusion matrix
+val_conf_matrix <- table(True = val_set$eyeDetection, Predicted = val_predictions)
+val_conf_matrix
+
+# Error rate
+val_error_rate <- mean(val_predictions != val_set$eyeDetection)
+val_error_rate
+
+```
+
+The validation error rate of **4.77%** highlights the model's strong performance. Most misclassifications occur in borderline cases, which is expected with noisy EEG data.
+
+**Test Set Prediction**
+
+```{r}
+# Predict on the test set (no labels available for error computation)
+test_predictions <- predict(svm_tune$best.model, test_scaled)
+
+# Bar plot of predicted classes
+library(ggplot2)
+ggplot(data.frame(Predictions = test_predictions), aes(x = Predictions)) +
+  geom_bar(fill = "blue") +
+  labs(title = "Distribution of Predicted Classes", x = "Predicted Class", y = "Count")
+
+
+```
+
+The bar plot shows a balanced distribution of predicted classes (0 and 1), indicating that the model is not biased toward either class.
+
+**Visualization**
+
+```{r}
+# Visualize decision boundary using PCA
+pca_result <- prcomp(train_scaled[, -15])
+pca_train <- data.frame(pca_result$x, eyeDetection = train_scaled$eyeDetection)
+ggplot(pca_train, aes(x = PC1, y = PC2, color = eyeDetection)) +
+  geom_point() +
+  labs(title = "PCA Projection of Training Data", x = "Principal Component 1", 
+       y = "Principal Component 2")
+
+```
+
+The PCA plot shows clear clustering of the two classes, supporting the Radial SVM's ability to separate non-linear patterns effectively.
+
+**Conclusion**
+
+The Radial SVM model achieved an error rate of 4.77% on the validation set, demonstrating its strong performance in classifying eye states based on EEG data. The low error rate and balanced predictions highlight the model's generalizability.
+
+### 2. K-Nearest Neighbors (Shahd Abu-Obeid & Anand Sabnis)
+
+show your model outputs here....
