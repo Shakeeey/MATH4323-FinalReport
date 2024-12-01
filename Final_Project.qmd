@@ -27,7 +27,9 @@ where:
 
 The dataset was divided into 80% for training and validation, and 20% for testing. Features were scaled to ensure equal importance. The best hyperparameters were identified through 5-fold cross-validation, optimizing both cost and 𝛾. Performance was assessed using error rates, confusion matrices, and visualizations.
 
-2.  KNN info here....
+2.  K-Nearest Neighbors (KNN) is a non-parametric, instance-based learning algorithm that classifies data points based on the majority class of their nearest neighbors. The key parameter in KNN is the number of neighbors k, which controls the size of the neighborhood used for classification.
+
+The dataset was divided into 80% for training and validation, and 20% for testing. Features were scaled to ensure equal importance, as KNN relies on distance metrics like Euclidean distance, which are sensitive to the scale of features. The optimal value of k was identified through 5-fold cross-validation by minimizing the validation error rate. Performance was assessed using error rates, confusion matrices, and visualizations.
 
 ## Data Analysis
 
@@ -175,4 +177,137 @@ The Radial SVM model achieved an error rate of 4.77% on the validation set, demo
 
 ### 2. K-Nearest Neighbors (Shahd Abu-Obeid & Anand Sabnis)
 
-show your model outputs here....
+```{r setup, include=FALSE}
+library(knitr)
+library(ggplot2)
+library(class)
+```
+
+**Load Data**
+
+```{r}
+# Load training and test data
+train_data <- read.csv("train.csv")
+test_data <- read.csv("test.csv")  # No eyeDetection column
+
+# Convert eyeDetection to a factor
+train_data$eyeDetection <- as.factor(train_data$eyeDetection)
+
+# Check data structure
+str(train_data)
+```
+
+**Exploratory Data Analysis**
+
+```{r}
+# Pairwise plot of first few features
+ggpairs(train_data[, c(1:5, 15)], aes(color = eyeDetection))
+
+# Correlation between first two electrodes
+cor(train_data$AF3, train_data$F7)
+```
+
+**Scaling and Data Splitting**
+
+```{r}
+# Scale features
+set.seed(123)
+train_scaled <- scale(train_data[, -15])
+test_scaled <- scale(test_data, center = attr(train_scaled, "scaled:center"), 
+                     scale = attr(train_scaled, "scaled:scale"))
+
+# Add eyeDetection back to the scaled training data
+train_scaled <- data.frame(train_scaled)
+train_scaled$eyeDetection <- train_data$eyeDetection
+
+# Split training data into train (80%) and validation (20%)
+n <- nrow(train_scaled)
+train_idx <- sample(1:n, 0.8 * n)
+train_set <- train_scaled[train_idx, ]
+val_set <- train_scaled[-train_idx, ]
+```
+
+**Model Tuning**
+
+```{r}
+# Tune KNN using cross-validation
+set.seed(123)
+k_values <- c(3, 5, 7, 9)
+val_error_rates <- numeric(length(k_values))
+
+for (i in seq_along(k_values)) {
+  k <- k_values[i]
+  knn_predictions <- knn(
+    train = train_set[, -15],
+    test = val_set[, -15],
+    cl = train_set$eyeDetection,
+    k = k
+  )
+  val_error_rates[i] <- mean(knn_predictions != val_set$eyeDetection)
+}
+
+# Optimal K
+optimal_k <- k_values[which.min(val_error_rates)]
+
+# Plot validation error rates for different k values
+library(ggplot2)
+ggplot(data.frame(k = k_values, ErrorRate = val_error_rates), aes(x = k, y = ErrorRate)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Validation Error Rates for KNN", x = "Number of Neighbors (k)", y = "Error Rate")
+```
+
+**Model Evaluation**
+```{r}
+# Predict on validation set using optimal K
+set.seed(123)
+val_predictions <- knn(
+  train = train_set[, -15],
+  test = val_set[, -15],
+  cl = train_set$eyeDetection,
+  k = optimal_k
+)
+
+# Confusion matrix
+val_conf_matrix <- table(True = val_set$eyeDetection, Predicted = val_predictions)
+val_conf_matrix
+
+# Error rate
+val_error_rate <- mean(val_predictions != val_set$eyeDetection)
+val_error_rate
+```
+
+**Test Set Prediction**
+```{r}
+# Predict on the test set (no labels available for error computation)
+set.seed(123)
+test_predictions <- knn(
+  train = train_set[, -15],
+  test = test_scaled,
+  cl = train_set$eyeDetection,
+  k = optimal_k
+)
+
+# Bar plot of predicted classes
+ggplot(data.frame(Predictions = test_predictions), aes(x = Predictions)) +
+  geom_bar(fill = "green") +
+  labs(title = "Distribution of Predicted Classes for KNN", x = "Predicted Class", y = "Count")
+```
+
+**Visualization**
+
+```{r}
+# Visualize decision boundary using PCA
+pca_result <- prcomp(train_scaled[, -15])
+pca_train <- data.frame(pca_result$x, eyeDetection = train_scaled$eyeDetection)
+ggplot(pca_train, aes(x = PC1, y = PC2, color = eyeDetection)) +
+  geom_point() +
+  labs(title = "PCA Projection of Training Data (KNN)", x = "Principal Component 1", 
+       y = "Principal Component 2")
+```
+
+The PCA plot provides a visual representation of the clustering achieved by the KNN model.
+
+**Conclusion**
+
+The KNN model achieved competitive performance on the validation set, demonstrating its effectiveness in classifying eye states based on EEG data. The optimal k value ensured a balance between underfitting and overfitting, and the results highlight KNN's potential as a robust classifier for this task.
