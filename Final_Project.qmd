@@ -8,8 +8,7 @@ toc: true
 
 ## Introduction
 
-The purpose of this project is to classify the eye state (open or closed) using EEG data collected from 14 electrodes placed on the scalp. The dataset consists of 10,486 observations with 14 numerical predictors and one binary response variable (eyeDetection). The focus is to evaluate the performance of a Support Vector Machine (SVM) model with a Radial Basis Function (RBF) kernel. This model is chosen for its ability to handle non-linear patterns effectively, which are common in EEG data. Additionally, we will also evaluate the performance of a K-Nearest Neighbors (KNN) model.
-KNN classifies data based on the majority class of nearby points, with the number of neighbors (k) being a key parameter. Features were scaled to ensure fair distance calculations, and cross-validation was used to select the optimal k. The model's performance was evaluated using error rates, confusion matrices, and visualizations to compare its effectiveness with SVM.
+The purpose of this project is to classify the eye state (open or closed) using EEG data collected from 14 electrodes placed on the scalp. The dataset consists of 10,486 observations with 14 numerical predictors and one binary response variable (eyeDetection). The focus is to evaluate the performance of a Support Vector Machine (SVM) model with a Radial Basis Function (RBF) kernel. This model is chosen for its ability to handle non-linear patterns effectively, which are common in EEG data. Additionally, we will also evaluate the performance of a K-Nearest Neighbors (KNN) model. KNN classifies data based on the majority class of nearby points, with the number of neighbors (k) being a key parameter. Features were scaled to ensure fair distance calculations, and cross-validation was used to select the optimal k. The model's performance was evaluated using error rates, confusion matrices, and visualizations to compare its effectiveness with SVM.
 
 ## Methodology/Models
 
@@ -176,7 +175,7 @@ The Radial SVM model achieved an error rate of 4.77% on the validation set, demo
 
 ### 2. K-Nearest Neighbors (Shahd Abu-Obeid & Anand Sabnis)
 
-```{r setup, include=FALSE}
+```{r setup2, include=FALSE}
 library(knitr)
 library(ggplot2)
 library(class)
@@ -257,6 +256,7 @@ ggplot(data.frame(k = k_values, ErrorRate = val_error_rates), aes(x = k, y = Err
 ```
 
 **Model Evaluation**
+
 ```{r}
 # Predict on validation set using optimal K
 set.seed(123)
@@ -277,6 +277,7 @@ val_error_rate
 ```
 
 **Test Set Prediction**
+
 ```{r}
 # Predict on the test set (no labels available for error computation)
 set.seed(123)
@@ -310,3 +311,21 @@ The PCA plot provides a visual representation of the clustering achieved by the 
 **Conclusion**
 
 The KNN model achieved an error rate of 5.24% on the validation set, demonstrating its effectiveness in classifying eye states based on EEG data. The slightly higher error rate compared to SVM highlights its limitations, but its performance remains competitive and reliable.
+
+## Conclusion
+
+The primary objective of this project was to classify eye states (open or closed) using EEG data with Support Vector Machine (SVM) and K-Nearest Neighbors (KNN) models. The results indicate that both models performed effectively, with SVM achieving a lower validation error rate (4.77%) compared to KNN (5.24%). This highlights the superior ability of SVM with a radial kernel to handle non-linear patterns in EEG data.
+
+During the analysis, challenges such as data scaling and hyperparameter tuning were encountered. While cross-validation helped mitigate overfitting, the noisy nature of EEG signals presented difficulties in achieving perfect separation of classes. Parameter selection, especially for SVM (cost and gamma) and KNN (k-value), required iterative optimization to balance accuracy and computational efficiency.
+
+For future improvements, additional data preprocessing techniques, such as signal denoising or feature selection, could further enhance classification accuracy. Incorporating advanced models like neural networks or ensemble methods, alongside robust hyperparameter search strategies, may yield better results. Moreover, using domain-specific features from EEG signals could provide valuable insights for classification tasks.
+
+In conclusion, the **SVM** model proved to be the most effective in this analysis, showcasing its robustness in dealing with complex and high-dimensional datasets like EEG data.
+
+## References
+
+1.  Chang, C.-C., & Lin, C.-J. (2011). LIBSVM: A library for support vector machines. *ACM Transactions on Intelligent Systems and Technology (TIST), 2(3), 1-27.*
+2.  Cover, T., & Hart, P. (1967). Nearest neighbor pattern classification. *IEEE Transactions on Information Theory, 13(1), 21-27.*
+3.  Bishop, C. M. (2006). Pattern recognition and machine learning. *Springer*.
+4.  Guyon, I., & Elisseeff, A. (2003). An introduction to variable and feature selection. *Journal of Machine Learning Research, 3, 1157-1182.*
+5.  Vapnik, V. N. (1995). The nature of statistical learning theory. *Springer Science & Business Media.*
