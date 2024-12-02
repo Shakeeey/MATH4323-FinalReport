@@ -9,8 +9,7 @@ toc: true
 ## Introduction
 
 The purpose of this project is to classify the eye state (open or closed) using EEG data collected from 14 electrodes placed on the scalp. The dataset consists of 10,486 observations with 14 numerical predictors and one binary response variable (eyeDetection). The focus is to evaluate the performance of a Support Vector Machine (SVM) model with a Radial Basis Function (RBF) kernel. This model is chosen for its ability to handle non-linear patterns effectively, which are common in EEG data. Additionally, we will also evaluate the performance of a K-Nearest Neighbors (KNN) model.
-
-Write here more about Knn.....
+KNN classifies data based on the majority class of nearby points, with the number of neighbors (k) being a key parameter. Features were scaled to ensure fair distance calculations, and cross-validation was used to select the optimal k. The model's performance was evaluated using error rates, confusion matrices, and visualizations to compare its effectiveness with SVM.
 
 ## Methodology/Models
 
@@ -310,4 +309,4 @@ The PCA plot provides a visual representation of the clustering achieved by the 
 
 **Conclusion**
 
-The KNN model achieved competitive performance on the validation set, demonstrating its effectiveness in classifying eye states based on EEG data. The optimal k value ensured a balance between underfitting and overfitting, and the results highlight KNN's potential as a robust classifier for this task.
+The KNN model achieved an error rate of 5.24% on the validation set, demonstrating its effectiveness in classifying eye states based on EEG data. The slightly higher error rate compared to SVM highlights its limitations, but its performance remains competitive and reliable.
